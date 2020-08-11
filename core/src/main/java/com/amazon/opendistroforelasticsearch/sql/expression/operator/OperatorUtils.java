@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
@@ -258,24 +259,34 @@ public class OperatorUtils {
   }
 
   /**
-   * String comparator.
+   * Construct {@link FunctionBuilder} which call function with no argument.
+   *
+   * @param functionName function name
+   * @param function     {@link Function}
+   * @param returnType   return type
+   * @param <T>          the type of the result to the function
+   * @return {@link FunctionBuilder}
    */
-  public static final BiFunction<String, String, Integer> STRING_COMPARATOR = String::compareTo;
-  /**
-   * List comparator.
-   */
-  public static final BiFunction<List, List, Integer> LIST_COMPARATOR =
-      (left, right) -> Integer.compare(left.size(), right.size());
-  /**
-   * Map comparator.
-   */
-  public static final BiFunction<Map, Map, Integer> MAP_COMPARATOR =
-      (left, right) -> Integer.compare(left.size(), right.size());
-  /**
-   * Predicate NULL or MISSING.
-   */
-  public static final BiPredicate<ExprValue, ExprValue> COMPARE_WITH_NULL_OR_MISSING =
-      (left, right) -> left.isMissing() || right.isMissing() || left.isNull() || right.isNull();
+  public static <T> FunctionBuilder noArgFunction(FunctionName functionName,
+                                                  Supplier<T> function,
+                                                  ExprCoreType returnType) {
+    return arguments -> new FunctionExpression(functionName, arguments) {
+      @Override
+      public ExprValue valueOf(Environment<Expression, ExprValue> valueEnv) {
+        return ExprValueUtils.fromObjectValue(function.get());
+      }
+
+      @Override
+      public ExprType type() {
+        return returnType;
+      }
+
+      @Override
+      public String toString() {
+        return String.format("%s()", functionName);
+      }
+    };
+  }
 
   public interface TriFunction<T, U, V, R> {
     R apply(T t, U u, V v);

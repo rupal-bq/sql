@@ -54,8 +54,15 @@ public class MathematicalFunctionIT extends SQLIntegTestCase {
   @Test
   public void testCrc32() throws IOException {
     JSONObject result = executeQuery("select crc32('MySQL')");
-    verifySchema(result, schema("crc32(\"MySQL\")", null, "long"));
+    verifySchema(result, schema("crc32('MySQL')", null, "long"));
     verifyDataRows(result, rows(3259397556L));
+  }
+
+  @Test
+  public void testE() throws IOException {
+    JSONObject result = executeQuery("select e()");
+    verifySchema(result, schema("e()", null, "double"));
+    verifyDataRows(result, rows(Math.E));
   }
 
   @Test
@@ -127,6 +134,13 @@ public class MathematicalFunctionIT extends SQLIntegTestCase {
     result = executeQuery("select truncate(-56, -1)");
     verifySchema(result, schema("truncate(-56, -1)", null, "long"));
     verifyDataRows(result, rows(-50));
+  }
+
+  @Test
+  public void testAtan() throws IOException {
+    JSONObject result = executeQuery("select atan(2, 3)");
+    verifySchema(result, schema("atan(2, 3)", null, "double"));
+    verifyDataRows(result, rows(Math.atan2(2, 3)));
   }
 
   protected JSONObject executeQuery(String query) throws IOException {

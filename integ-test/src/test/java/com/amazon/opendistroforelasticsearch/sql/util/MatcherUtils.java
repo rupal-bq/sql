@@ -194,6 +194,11 @@ public class MatcherUtils {
     assertThat(objects, containsInRelativeOrder(matchers));
   }
 
+  public static TypeSafeMatcher<JSONObject> schema(String expectedName,
+                                                   String expectedType) {
+    return schema(expectedName, null, expectedType);
+  }
+
   public static TypeSafeMatcher<JSONObject> schema(String expectedName, String expectedAlias,
                                                    String expectedType) {
     return new TypeSafeMatcher<JSONObject>() {
@@ -239,6 +244,8 @@ public class MatcherUtils {
             isEqual = ((JSONObject) expected).similar(array.get(i));
           } else if (expected instanceof JSONArray) {
             isEqual = ((JSONArray) expected).similar(array.get(i));
+          } else if (null == expected) {
+            isEqual = JSONObject.NULL == array.get(i);
           } else {
             isEqual = expected.equals(array.get(i));
           }
