@@ -16,10 +16,60 @@
 package com.amazon.opendistroforelasticsearch.sql.benchmark.utils.load.cassandra;
 
 import com.amazon.opendistroforelasticsearch.sql.benchmark.utils.load.DataFormat;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Data format for Cassandra database.
  */
 public class CassandraDataFormat extends DataFormat {
 
+  private String keyspaceName = "benchmark_test_keyspace";
+
+  // Map<tablename, Map<schema/insert,  createStatement/insertStatement>>
+  private Map<String, Map<String, String>> tableSchemaAndInsertMap = new LinkedHashMap<>();
+
+  /**
+   * Returns tableSchemaAndInsertMap
+   *
+   * @return Map of create & insert statements for all tables
+   */
+  public Map<String, Map<String, String>> getTableSchemaAndInsertMap() {
+    if (tableSchemaAndInsertMap.size() == 0) {
+      createTableSchemaAndInsertMap();
+    }
+    return tableSchemaAndInsertMap;
+  }
+
+  private void createTableSchemaAndInsertMap() {
+    for (String tablename : CassandraTpchSchema.schemaMap.keySet()) {
+      String schema = "CREATE TABLE " + keyspaceName + "." + tablename + " (";
+      String insert = "INSERT INTO " + keyspaceName + "." + tablename + " (";
+      int i=1;
+      for(String field : CassandraTpchSchema.schemaMap.get(tablename).keySet()){
+        schema += " " + field + " " + CassandraTpchSchema.schemaMap.get(tablename).get(field) + " ";
+        if(CassandraTpchSchema.primaryKeyMap.get(tablename).contains(field)){
+          schema += "PRIMARY KEY";
+        }
+        insert += " " + field + " ";
+        if(i < CassandraTpchSchema.schemaMap.get(tablename).size()){
+          schema += ",";
+          insert += ",";
+          i++;
+        }
+      }
+      schema += ")";
+      insert += ") VALUES (";
+      while(i > 1){
+        insert += "?, ";
+        i--;
+      }
+      insert += "?)";
+
+      Map<String, String> statementMap = new LinkedHashMap<>();
+      statementMap.put("schema",schema);
+      statementMap.put("insert",insert);
+      tableSchemaAndInsertMap.put(tablename, statementMap);
+    }
+  }
 }
