@@ -123,7 +123,8 @@ public class ElasticsearchDataTransformer implements DataTransformer {
         JSONObject tableFields = new JSONObject();
         for (String tableField : ElasticsearchTpchSchema.schemaMap.get(tableName).keySet()) {
           JSONObject tableFieldsType = new JSONObject();
-          tableFieldsType.put("type", ElasticsearchTpchSchema.schemaMap.get(tableName).get(tableField));
+          tableFieldsType
+              .put("type", ElasticsearchTpchSchema.schemaMap.get(tableName).get(tableField));
           tableFields.put(tableField, tableFieldsType);
         }
         JSONObject properties = new JSONObject();

@@ -9,6 +9,7 @@ public class CassandraDataFormatTest {
   @Test
   public void testCassandraDataTransformer() throws Exception {
     CassandraDataTransformer dataTransformer = new CassandraDataTransformer();
-    CassandraDataFormat dataFormat = (CassandraDataFormat) dataTransformer.transformData("/Users/rupalmahajan/Projects/GitHub/sql/benchmark/data/");
+    CassandraDataFormat dataFormat = (CassandraDataFormat) dataTransformer
+        .transformData("/Users/rupalmahajan/Projects/GitHub/sql/benchmark/data/");
   }
 }

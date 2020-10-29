@@ -18,7 +18,6 @@ package com.amazon.opendistroforelasticsearch.sql.benchmark.utils.load.cassandra
 import com.amazon.opendistroforelasticsearch.sql.benchmark.utils.CommandExecution;
 import com.amazon.opendistroforelasticsearch.sql.benchmark.utils.load.DataFormat;
 import com.amazon.opendistroforelasticsearch.sql.benchmark.utils.load.DataTransformer;
-import com.sun.jdi.InvalidTypeException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -80,9 +79,9 @@ public class CassandraDataTransformer implements DataTransformer {
         String line;
         while ((line = bufferedReader.readLine()) != null) {
           List<String> argsList = Arrays.asList(line.split("\\|"));
-          int index=0;
+          int index = 0;
           Map<String, Object> row = new HashMap<>();
-          for(String field : CassandraTpchSchema.schemaMap.get(tableName).keySet()){
+          for (String field : CassandraTpchSchema.schemaMap.get(tableName).keySet()) {
             row.put(field, getValue(tableName, field, argsList.get(index++)));
           }
           writer.addRow(row);
@@ -95,19 +94,19 @@ public class CassandraDataTransformer implements DataTransformer {
     return result;
   }
 
-  private Object getValue(String table, String field, String value) throws Exception{
+  private Object getValue(String table, String field, String value) throws Exception {
     String type = CassandraTpchSchema.schemaMap.get(table).get(field);
-    if(type == "text"){
+    if (type == "text") {
       return String.valueOf(value);
-    }else if( type == "bigint"){
+    } else if (type == "bigint") {
       return BigInteger.valueOf(Long.parseLong(value));
-    }else if(type == "decimal"){
+    } else if (type == "decimal") {
       return BigDecimal.valueOf(Long.parseLong(value));
-    }else if(type == "int"){
+    } else if (type == "int") {
       return Integer.valueOf(value);
-    }else if(type == "date"){
+    } else if (type == "date") {
       return Date.valueOf(value);
     }
-    throw new InvalidTypeException("Invalid Type");
+    throw new Exception("Invalid Type");
   }
 }
