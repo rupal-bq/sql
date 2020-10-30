@@ -81,8 +81,8 @@ public class BenchmarkService {
         results.add(performBenchmark(type, sf));
         launcher.shutdownDatabase(systemPassword);
       }
-      //DataGenerator.cleanupData(benchmarkPath);
-      //QueryGenerator.cleanupQueries(benchmarkPath);
+      DataGenerator.cleanupData(benchmarkPath);
+      QueryGenerator.cleanupQueries(benchmarkPath);
     }
     interpretResults(results);
   }
