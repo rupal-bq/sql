@@ -55,6 +55,9 @@ public class CassandraDataTransformer implements DataTransformer {
     CommandExecution.executeCommand("mkdir " + dataPath + "cassandra/");
     transformedDataPath = dataPath + "cassandra/";
 
+    createQ1Data(dataPath + "lineitem.tbl", result);
+
+    /*
     for (String tablename : CassandraTpchSchema.schemaMap.keySet()) {
       File table = new File(dataPath + tablename + ".tbl");
       if (!table.exists() || !table.isFile()) {
@@ -106,6 +109,8 @@ public class CassandraDataTransformer implements DataTransformer {
         writer.close();
       }
     }
+    */
+
     return result;
   }
 
@@ -139,6 +144,72 @@ public class CassandraDataTransformer implements DataTransformer {
         index++;
       }
     }
+    writer.newLine();
+  }
+
+  private void createQ1Data(String lineitemPath, CassandraDataFormat fileList) throws Exception {
+    File table = new File(lineitemPath);
+    if (!table.exists() || !table.isFile()) {
+      throw new FileNotFoundException("lineitem.tbl not found");
+    }
+
+    FileReader fileReader = new FileReader(table);
+    BufferedReader reader = new BufferedReader(fileReader);
+
+    int csvFilesNumber = 1;
+    String filename = "TPCH_Q1_data_" + csvFilesNumber++ + ".csv";
+    BufferedWriter writer = new BufferedWriter(
+        new FileWriter(transformedDataPath + filename, true));
+
+    try {
+      fileList.addFile(transformedDataPath + filename);
+      addQ1SchemaToCSV(writer);
+      String line;
+
+      int dataLineCounter = 0;
+      while ((line = reader.readLine()) != null) {
+        List<String> lineitemArgs = Arrays.asList(line.split("\\|"));
+
+        String insertData = "'" + lineitemArgs.get(0) + "', "
+            + "'" + lineitemArgs.get(9) + "', "
+            + "'" + lineitemArgs.get(8) + "', "
+            + lineitemArgs.get(4) + ", "
+            + lineitemArgs.get(5) + ", "
+            + lineitemArgs.get(6) + ", "
+            + lineitemArgs.get(7) + ", "
+            + "'" + lineitemArgs.get(10) + "'";
+
+        writer.write(insertData);
+        writer.newLine();
+        dataLineCounter++;
+
+        if (dataLineCounter == 100 * (csvFilesNumber - 1)) {
+          writer.close();
+          filename = "TPCH_Q1_data_" + csvFilesNumber++ + ".csv";
+          writer = new BufferedWriter(new FileWriter(transformedDataPath + filename, true));
+          fileList.addFile(transformedDataPath + filename);
+          addQ1SchemaToCSV(writer);
+        }
+      }
+    } finally {
+      fileReader.close();
+      writer.close();
+    }
+  }
+
+  private void addQ1SchemaToCSV(BufferedWriter writer) throws IOException {
+    writer.write(CassandraTpchSchema.keyspaceName);
+    writer.newLine();
+    writer.write("TPCH_Q1");
+    writer.newLine();
+
+    writer.write("orderkey text, linestatus text, returnflag text, quantity double, "
+        + "extendedprice double, discount double, tax double, shipdate timestamp, "
+        + "PRIMARY KEY ((returnflag,linestatus),shipdate,orderkey,linenumber)");
+    writer.newLine();
+
+    writer.write("orderkey, linestatus, returnflag, quantity, extendedprice, discount, tax, "
+        + "shipdate");
     writer.newLine();
   }
 }

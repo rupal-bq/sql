@@ -24,14 +24,32 @@ public class Queries {
 
   static {
     // TODO: Add proper queries supported by all databases.
-    queries.add("select l_returnflag, l_linestatus, sum(l_quantity) as sum_qty, "
-        + "sum(l_extendedprice) as sum_base_price, sum(l_extendedprice * (1 - l_discount)) as "
-        + "sum_disc_price, sum(l_extendedprice * (1 - l_discount) * (1 + l_tax)) as sum_charge, "
-        + "avg(l_quantity) as avg_qty, avg(l_extendedprice) as avg_price, avg(l_discount) as "
-        + "avg_disc, count(*) as count_order from lineitem;");
-    queries.add("select c_custkey, c_name from customer where c_custkey in (1, 2, 3, 4, 5);");
-    queries.add("select * from lineitem;");
-    queries.add("select count(*), max(l_discount), l_comment from lineitem where l_shipmode = 'AIR'"
-        + " ALLOW FILTERING");
+    queries.add("CREATE OR REPLACE FUNCTION  CASSANDRA_EXAMPLE_KEYSPACE.fSumDiscPrice "
+        + "(l_extendedprice double,l_discount double) CALLED ON NULL INPUT RETURNS double LANGUAGE "
+        + "java AS 'return (Double.valueOf( l_extendedprice.doubleValue() * "
+        + " (1.0 - l_discount.doubleValue() ) ));");
+    queries.add("CREATE OR REPLACE FUNCTION CASSANDRA_EXAMPLE_KEYSPACE.fSumChargePrice "
+        + "(l_extendedprice double,l_discount double,l_tax double) CALLED ON NULL INPUT RETURNS "
+        + "double LANGUAGE java AS 'return (Double.valueOf( l_extendedprice.doubleValue() *  "
+        + "(1.0 - l_discount.doubleValue() ) * (1.0 + l_tax.doubleValue()) ));';");
+    queries.add("SELECT "
+        + " returnflag, "
+        + " linestatus, "
+        + " sum(quantity) as sum_qty, "
+        + " sum(extendedprice) as sum_base_price, "
+        + " sum(CASSANDRA_EXAMPLE_KEYSPACE.fSumDiscPrice(extendedprice,discount))"
+        + " as sum_disc_price, "
+        + " sum(CASSANDRA_EXAMPLE_KEYSPACE.fSumChargePrice(extendedprice,discount,tax))"
+        + " as sum_charge, "
+        + " avg(quantity) as avg_qty, avg(extendedprice) as avg_price, "
+        + " avg(discount) as avg_disc, "
+        + " count(*) as count_order "
+        + "FROM "
+        + " CASSANDRA_EXAMPLE_KEYSPACE.TPCH_Q1 "
+        + "WHERE "
+        + " shipdate < '2000-01-01 22:00:00-0700' "
+        + " and returnflag='N' "
+        + " and linestatus = 'O' ;");
+    ;
   }
 }
