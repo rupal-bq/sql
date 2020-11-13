@@ -20,9 +20,14 @@ import static com.amazon.opendistroforelasticsearch.sql.benchmark.utils.CommandE
 import com.amazon.opendistroforelasticsearch.sql.benchmark.BenchmarkService;
 import com.amazon.opendistroforelasticsearch.sql.benchmark.utils.launch.DatabaseLauncher;
 
+import com.amazon.opendistroforelasticsearch.sql.benchmark.utils.load.cassandra.CassandraTpchSchema;
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Session;
 import java.io.IOException;
 
 public class CassandraDatabaseLauncher implements DatabaseLauncher {
+
+  private static final String NODE = "127.0.0.1";
 
   /**
    * Function to launch an Cassandra database.
@@ -42,6 +47,14 @@ public class CassandraDatabaseLauncher implements DatabaseLauncher {
    */
   @Override
   public void close() throws Exception {
+    Cluster cluster = Cluster.builder()
+        .addContactPoint(NODE)
+        .build();
+    Session session = cluster.connect();
+    session.execute("drop keyspace " + CassandraTpchSchema.keyspaceName);
+    session.close();
+    cluster.close();
+
     executeCommand(
         "echo " + BenchmarkService.systemPassword + " | sudo -S systemctl stop cassandra.service");
     executeCommand(

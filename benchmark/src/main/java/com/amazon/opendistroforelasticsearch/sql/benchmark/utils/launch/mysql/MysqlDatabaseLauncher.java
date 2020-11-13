@@ -20,12 +20,19 @@ import static com.amazon.opendistroforelasticsearch.sql.benchmark.utils.CommandE
 import com.amazon.opendistroforelasticsearch.sql.benchmark.BenchmarkService;
 import com.amazon.opendistroforelasticsearch.sql.benchmark.utils.launch.DatabaseLauncher;
 
+import com.amazon.opendistroforelasticsearch.sql.benchmark.utils.load.mysql.MysqlTpchSchema;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 /**
  * Class to handle launching and shutting down MySQL databases.
  */
 public class MysqlDatabaseLauncher implements DatabaseLauncher {
+
+  private static final String URL = "jdbc:mysql://localhost/";
 
   /**
    * Function to launch an MySQL database.
@@ -42,6 +49,13 @@ public class MysqlDatabaseLauncher implements DatabaseLauncher {
    */
   @Override
   public void close() throws Exception {
+    String authUrl = URL + "?user=" + BenchmarkService.mysqlUsername + "&password="
+        + BenchmarkService.mysqlPassword;
+    Class.forName("com.mysql.cj.jdbc.Driver");
+    Connection connection = DriverManager.getConnection(authUrl);
+    Statement statement = connection.createStatement();
+    statement.executeUpdate("drop database " + MysqlTpchSchema.databaseName);
+
     executeCommand(
         "echo " + BenchmarkService.systemPassword + " | sudo -S systemctl stop mysql.service");
     executeCommand("echo " + BenchmarkService.systemPassword + " | sudo -S systemctl status mysql");
